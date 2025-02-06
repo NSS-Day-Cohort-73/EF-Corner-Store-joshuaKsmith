@@ -118,7 +118,12 @@ app.MapGet("/api/products", (CornerStoreDbContext db, string? q) =>
 });
 
 
-
+app.MapPost("/api/products", (CornerStoreDbContext db, Product product) => 
+{
+    db.Products.Add(product);
+    db.SaveChanges();
+    return Results.Created($"/api/products/{product.Id}", product);
+});
 
 
 

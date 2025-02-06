@@ -125,6 +125,22 @@ app.MapPost("/api/products", (CornerStoreDbContext db, Product product) =>
     return Results.Created($"/api/products/{product.Id}", product);
 });
 
+app.MapPut("/api/products/{id}", (CornerStoreDbContext db, int id, Product product) => 
+{
+    Product productToUpdate = db.Products.SingleOrDefault(p => p.Id == id);
+    if (productToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+    productToUpdate.Id = product.Id;
+    productToUpdate.ProductName = product.ProductName;
+    productToUpdate.Price = product.Price;
+    productToUpdate.Brand = product.Brand;
+    productToUpdate.CategoryId = product.CategoryId;
+    
+    db.SaveChanges();
+    return Results.NoContent();
+});
 
 
 ////////////////////////////////////////////////////////////////////

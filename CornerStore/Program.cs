@@ -155,20 +155,66 @@ app.MapDelete("/api/orders{id}", (CornerStoreDbContext db, int id) =>
     return Results.NoContent();
 });
 
-app.MapPost("/api/orders", (CornerStoreDbContext db, Order newOrder) =>
+
+////////////////////////////////////////////////////////////////////////////////
+app.MapPost("/api/orders", (CornerStoreDbContext db, Order order) =>
 {
-    try
+    foreach (OrderProduct op in order.OrderProducts)
     {
-        db.Orders.Add(newOrder);
-        db.SaveChanges();
-        return Results.Created($"/api/reservations/{newOrder.Id}", newOrder);
+        Product product = db.Products.Find(op.ProductId);
+        if (product == null)
+        {
+            return Results.BadRequest();
+        }
     }
-    catch (DbUpdateException)
+
+    Order newOrder = new Order
     {
-        return Results.BadRequest("Invalid data submitted");
-    }
+        CashierId = order.CashierId,
+        OrderProducts = order.OrderProducts.Select(op => new OrderProduct
+        {
+            ProductId = op.ProductId,
+            Quantity = op.Quantity
+        }).ToList(),
+        PaidOnDate = order.PaidOnDate
+    };
+
+    db.Orders.Add(newOrder);
+    db.SaveChanges();
+    return Results.Created($"/orders/{newOrder.Id}", newOrder);
 });
 
+app.MapGet("/api/orders", (CornerStoreDbContext db, string orderDate) => 
+{
+    IQueryable<Order> query = db.Orders
+        .Include(o => o.Cashier)
+        .Include(o => o.OrderProducts)
+        .ThenInclude(op => op.Product)
+        .ThenInclude(p => p.Category);        
+
+    if (!string.IsNullOrEmpty(orderDate))
+    {
+        var parsedDate = DateTime.Parse(orderDate);
+        query = query.Where(o => o.PaidOnDate == parsedDate);
+    }
+
+    return query
+        .Select(o => new OrderDTO
+        {
+            Id = o.Id,
+            CashierId = o.CashierId,
+            Cashier = new CashierDTO
+            {
+                Id = o.Cashier.Id,
+                FirstName = o.Cashier.FirstName,
+                LastName = o.Cashier.LastName,
+                FullName = o.Cashier.FullName
+            },
+            Total = o.Total,
+            PaidOnDate = o.PaidOnDate
+        }).ToList();
+});
+///////////////////////////////////////////////////////////////////////////////
 
 
 app.MapGet("/api/orders/{id}", (CornerStoreDbContext db, int id) => 

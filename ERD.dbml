@@ -1,0 +1,44 @@
+Table Category {
+    Id int [pk]
+    CategoryName string
+    Products "List<Product>"
+}
+
+Table Product {
+    Id int [pk]
+    ProductName string
+    Price decimal
+    Brand string
+    CategoryId int
+    Category Category
+}
+
+Table OrderProduct {
+    ProductId int
+    Product Product
+    OrderId int
+    Order Order
+    Quantity int
+}
+
+Table Order {
+    Id int [pk]
+    CashierId int
+    Cashier Cashier
+    Total "=> decimal"
+    PaidOnDate "DateTime?"
+    OrderProducts "List<OrderProduct>"
+}
+
+Table Cashier {
+    Id int [pk]
+    FirstName string
+    LastName string
+    FullName "=> string"
+    Orders "List<Order>"
+}
+
+ref: Product.CategoryId > Category.Id
+ref: OrderProduct.ProductId > Product.Id
+ref: OrderProduct.OrderId > Order.Id
+ref: Order.CashierId > Cashier.Id

@@ -89,14 +89,14 @@ app.MapGet("/api/cashiers/{id}", (CornerStoreDbContext db, int id) =>
 });
 
 
-app.MapGet("/api/products", (CornerStoreDbContext db, string? q) =>
+app.MapGet("/api/products", (CornerStoreDbContext db, string? search) =>
 {
     IQueryable<Product> query = db.Products.Include(p => p.Category);
 
-    if (!string.IsNullOrEmpty(q))
+    if (!string.IsNullOrEmpty(search))
     {
         // Using EF.Functions.Like for case-insensitive search
-        string queryLower = q.ToLower(); // Convert the search query to lowercase
+        string queryLower = search.ToLower(); // Convert the search query to lowercase
         query = query.Where(p => 
             EF.Functions.Like(p.ProductName.ToLower(), $"%{queryLower}%") || 
             EF.Functions.Like(p.Category.CategoryName.ToLower(), $"%{queryLower}%"));
@@ -142,6 +142,18 @@ app.MapPut("/api/products/{id}", (CornerStoreDbContext db, int id, Product produ
     return Results.NoContent();
 });
 
+
+app.MapDelete("/api/orders{id}", (CornerStoreDbContext db, int id) => 
+{
+    Order order = db.Orders.SingleOrDefault(o => o.Id == id);
+    if (order == null)
+    {
+        return Results.NotFound();
+    }
+    db.Orders.Remove(order);
+    db.SaveChanges();
+    return Results.NoContent();
+});
 
 ////////////////////////////////////////////////////////////////////
 app.Run();

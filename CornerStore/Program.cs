@@ -35,14 +35,14 @@ app.UseHttpsRedirection();
 ///////////////////////////////////////////////////////////////////
 //endpoints go here
 
-app.MapPost("/api/cashiers", (CornerStoreDbContext db, Cashier cashier) => 
+app.MapPost("/cashiers", (CornerStoreDbContext db, Cashier cashier) => 
 {
     db.Cashiers.Add(cashier);
     db.SaveChanges();
-    return Results.Created($"/api/cashiers/{cashier.Id}", cashier);
+    return Results.Created($"/cashiers/{cashier.Id}", cashier);
 });
 
-app.MapGet("/api/cashiers/{id}", (CornerStoreDbContext db, int id) => 
+app.MapGet("/cashiers/{id}", (CornerStoreDbContext db, int id) => 
 {
     var cashier = db.Cashiers
         .Where(c => c.Id == id)
@@ -89,7 +89,7 @@ app.MapGet("/api/cashiers/{id}", (CornerStoreDbContext db, int id) =>
 });
 
 
-app.MapGet("/api/products", (CornerStoreDbContext db, string? search) =>
+app.MapGet("/products", (CornerStoreDbContext db, string? search) =>
 {
     IQueryable<Product> query = db.Products.Include(p => p.Category);
 
@@ -102,7 +102,7 @@ app.MapGet("/api/products", (CornerStoreDbContext db, string? search) =>
             EF.Functions.Like(p.Category.CategoryName.ToLower(), $"%{queryLower}%"));
     }
 
-    return query.Select(p => new ProductDTO
+    return Results.Ok(query.Select(p => new ProductDTO
     {
         Id = p.Id,
         ProductName = p.ProductName,
@@ -114,18 +114,18 @@ app.MapGet("/api/products", (CornerStoreDbContext db, string? search) =>
             Id = p.Category.Id,
             CategoryName = p.Category.CategoryName
         }
-    }).ToList();
+    }).ToList());
 });
 
 
-app.MapPost("/api/products", (CornerStoreDbContext db, Product product) => 
+app.MapPost("/products", (CornerStoreDbContext db, Product product) => 
 {
     db.Products.Add(product);
     db.SaveChanges();
-    return Results.Created($"/api/products/{product.Id}", product);
+    return Results.Created($"/products/{product.Id}", product);
 });
 
-app.MapPut("/api/products/{id}", (CornerStoreDbContext db, int id, Product product) => 
+app.MapPut("/products/{id}", (CornerStoreDbContext db, int id, Product product) => 
 {
     Product productToUpdate = db.Products.SingleOrDefault(p => p.Id == id);
     if (productToUpdate == null)
@@ -143,7 +143,7 @@ app.MapPut("/api/products/{id}", (CornerStoreDbContext db, int id, Product produ
 });
 
 
-app.MapDelete("/api/orders{id}", (CornerStoreDbContext db, int id) => 
+app.MapDelete("/orders/{id}", (CornerStoreDbContext db, int id) => 
 {
     Order order = db.Orders.SingleOrDefault(o => o.Id == id);
     if (order == null)
@@ -157,7 +157,7 @@ app.MapDelete("/api/orders{id}", (CornerStoreDbContext db, int id) =>
 
 
 ////////////////////////////////////////////////////////////////////////////////
-app.MapPost("/api/orders", (CornerStoreDbContext db, Order order) =>
+app.MapPost("/orders", (CornerStoreDbContext db, Order order) =>
 {
     foreach (OrderProduct op in order.OrderProducts)
     {
@@ -184,7 +184,7 @@ app.MapPost("/api/orders", (CornerStoreDbContext db, Order order) =>
     return Results.Created($"/orders/{newOrder.Id}", newOrder);
 });
 
-app.MapGet("/api/orders", (CornerStoreDbContext db, string orderDate) => 
+app.MapGet("/orders", (CornerStoreDbContext db, string orderDate) => 
 {
     IQueryable<Order> query = db.Orders
         .Include(o => o.Cashier)
@@ -217,9 +217,10 @@ app.MapGet("/api/orders", (CornerStoreDbContext db, string orderDate) =>
 ///////////////////////////////////////////////////////////////////////////////
 
 
-app.MapGet("/api/orders/{id}", (CornerStoreDbContext db, int id) => 
+app.MapGet("/orders/{id}", (CornerStoreDbContext db, int id) => 
 {
     var order = db.Orders
+        .Where(o => o.Id == id)
         .Include(o => o.Cashier)
         .Include(o => o.OrderProducts)
         .ThenInclude(op => op.Product)

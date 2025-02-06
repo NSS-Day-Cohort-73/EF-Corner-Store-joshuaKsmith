@@ -44,11 +44,11 @@ public class CornerStoreDbContext : DbContext
         });
         modelBuilder.Entity<OrderProduct>().HasData(new OrderProduct[]
         {
-            new OrderProduct { ProductId = 1, OrderId = 1, Quantity = 1},
-            new OrderProduct { ProductId = 2, OrderId = 1, Quantity = 1},
-            new OrderProduct { ProductId = 3, OrderId = 2, Quantity = 2},
-            new OrderProduct { ProductId = 3, OrderId = 3, Quantity = 1},
-            new OrderProduct { ProductId = 4, OrderId = 3, Quantity = 1}
+            new OrderProduct { Id = 1, ProductId = 1, OrderId = 1, Quantity = 1},
+            new OrderProduct { Id = 2, ProductId = 2, OrderId = 1, Quantity = 1},
+            new OrderProduct { Id = 3, ProductId = 3, OrderId = 2, Quantity = 2},
+            new OrderProduct { Id = 4, ProductId = 3, OrderId = 3, Quantity = 1},
+            new OrderProduct { Id = 5, ProductId = 4, OrderId = 3, Quantity = 1}
         });
     }
 }

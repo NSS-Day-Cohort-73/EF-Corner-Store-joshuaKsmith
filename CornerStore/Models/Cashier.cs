@@ -9,7 +9,7 @@ public class Cashier
     [Required]
     public string FirstName { get; set; }
     public string LastName { get; set; }
-    public string FullName => FirstName + LastName;
+    public string FullName => FirstName + " " + LastName;
     public List<Order> Orders { get; set; }
 
 }

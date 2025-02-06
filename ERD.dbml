@@ -14,6 +14,7 @@ Table Product {
 }
 
 Table OrderProduct {
+    Id int [pk]
     ProductId int
     Product Product
     OrderId int

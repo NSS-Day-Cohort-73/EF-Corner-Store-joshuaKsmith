@@ -155,6 +155,81 @@ app.MapDelete("/api/orders{id}", (CornerStoreDbContext db, int id) =>
     return Results.NoContent();
 });
 
+app.MapPost("/api/orders", (CornerStoreDbContext db, Order newOrder) =>
+{
+    try
+    {
+        db.Orders.Add(newOrder);
+        db.SaveChanges();
+        return Results.Created($"/api/reservations/{newOrder.Id}", newOrder);
+    }
+    catch (DbUpdateException)
+    {
+        return Results.BadRequest("Invalid data submitted");
+    }
+});
+
+
+
+app.MapGet("/api/orders/{id}", (CornerStoreDbContext db, int id) => 
+{
+    var order = db.Orders
+        .Include(o => o.Cashier)
+        .Include(o => o.OrderProducts)
+        .ThenInclude(op => op.Product)
+        .ThenInclude(p => p.Category)
+        .Select(o => new OrderDTO
+        {
+            Id = o.Id,
+            CashierId = o.CashierId,
+            Cashier = new CashierDTO
+            {
+                Id = o.Cashier.Id,
+                FirstName = o.Cashier.FirstName,
+                LastName = o.Cashier.LastName,
+                FullName = o.Cashier.FullName
+            },
+            Total = o.Total,
+            PaidOnDate = o.PaidOnDate,
+            OrderProducts = o.OrderProducts
+                .Select(op => new OrderProductDTO
+                {
+                    Id = op.Id,
+                    ProductId = op.ProductId,
+                    Product = new ProductDTO
+                        {
+                            Id = op.Product.Id,
+                            ProductName = op.Product.ProductName,
+                            Price = op.Product.Price,
+                            Brand = op.Product.Brand,
+                            CategoryId = op.Product.CategoryId,
+                            Category = new CategoryDTO
+                            {
+                                Id = op.Product.Category.Id,
+                                CategoryName = op.Product.Category.CategoryName
+                            } 
+                        },
+                    OrderId = op.OrderId,
+                    Quantity = op.Quantity
+                }).ToList()
+        })
+        .FirstOrDefault();
+    if (order == null)
+    {
+        return Results.NotFound();
+    }
+    return Results.Ok(order);
+});
+
+
+
+
+
+
+
+
+
+
 ////////////////////////////////////////////////////////////////////
 app.Run();
 

@@ -89,7 +89,33 @@ app.MapGet("/api/cashiers/{id}", (CornerStoreDbContext db, int id) =>
 });
 
 
+app.MapGet("/api/products", (CornerStoreDbContext db, string? q) =>
+{
+    IQueryable<Product> query = db.Products.Include(p => p.Category);
 
+    if (!string.IsNullOrEmpty(q))
+    {
+        // Using EF.Functions.Like for case-insensitive search
+        string queryLower = q.ToLower(); // Convert the search query to lowercase
+        query = query.Where(p => 
+            EF.Functions.Like(p.ProductName.ToLower(), $"%{queryLower}%") || 
+            EF.Functions.Like(p.Category.CategoryName.ToLower(), $"%{queryLower}%"));
+    }
+
+    return query.Select(p => new ProductDTO
+    {
+        Id = p.Id,
+        ProductName = p.ProductName,
+        Price = p.Price,
+        Brand = p.Brand,
+        CategoryId = p.CategoryId,
+        Category = new CategoryDTO
+        {
+            Id = p.Category.Id,
+            CategoryName = p.Category.CategoryName
+        }
+    }).ToList();
+});
 
 
 
